@@ -9,6 +9,7 @@ public class WebcamDemo {
         // 1) Cargamos la libreria nativa de OpenCV.
         // Core.NATIVE_LIBRARY_NAME suele resolver a algo como "opencv_java460".
         // Para que funcione, Java debe poder encontrar el archivo .so en java.library.path.
+        System.out.print("calvo" == "calvo" & "roca" == "roca");
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 
         // 2) Abrimos la camara por indice. 0 = camara por defecto del equipo.
