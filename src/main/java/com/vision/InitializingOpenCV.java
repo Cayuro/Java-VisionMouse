@@ -1,33 +1,87 @@
-package com.vision; // Define el paquete donde reside la clase
+package com.vision;
 
-// Importa las funciones principales de OpenCV (Matrices, constantes de versión, etc.)
-import org.bytedeco.opencv.global.opencv_core;
-// Importa el cargador de JavaCPP, encargado de extraer y cargar los binarios (.dll/.so)
-import org.bytedeco.javacpp.Loader;
+// IMPORTACIONES:
+// CanvasFrame: Ventana de GUI optimizada para video (evita parpadeo visual).
+import org.bytedeco.javacv.CanvasFrame;
+// Frame: Objeto contenedor que transporta los datos de imagen capturados por el sensor.
+import org.bytedeco.javacv.Frame;
+// OpenCVFrameGrabber: Driver que conecta Java con la cámara física a través de OpenCV.
+import org.bytedeco.javacv.OpenCVFrameGrabber;
+// WindowConstants: Define reglas de cierre para liberar memoria al cerrar la ventana.
+import javax.swing.WindowConstants;
 
 public class InitializingOpenCV {
 
     public static void main(String[] args) {
-        
-        System.out.println("Getting Started with OpenCV in Java 21");
+        // QUÉ: Mensaje informativo inicial.
+        // CÓMO: Imprime en consola estándar de Java.
+        // POR QUÉ: Notifica al desarrollador que el proceso de inicio ha comenzado.
+        System.out.println("Initializing real-time camera capture...");
 
-        try {
-            // LÍNEA CRÍTICA: Intenta vincular el código Java con la librería nativa de C++
-            // Si los binarios no están en el PATH o faltan dependencias, aquí saltará el error
-            Loader.load(opencv_core.class);
+        // QUÉ: Bloque Try-with-resources para el Grabber.
+        // CÓMO: Instancia el capturador en el índice 0 (cámara por defecto).
+        // POR QUÉ: Garantiza que la cámara se "apague" automáticamente al terminar.
+        try (OpenCVFrameGrabber grabber = new OpenCVFrameGrabber(0)) {
+            grabber.start(); // QUÉ: Activa el hardware. POR QUÉ: Inicia el flujo de datos.
 
-            // Accede a la constante global CV_VERSION dentro de la librería ya cargada
-            System.out.println("Detected OpenCV version: " + opencv_core.CV_VERSION);
-            
-            // Si llegamos aquí, significa que la comunicación Java-C++ es exitosa
-            System.out.println("OpenCV has loaded successfully!");
+            // QUÉ: Cálculo de corrección Gamma.
+            // CÓMO: Obtiene el gamma del sistema vs el valor reportado por la cámara.
+            // POR QUÉ: Ajusta el brillo para que la imagen no se vea oscura o quemada.
+            double gamma = CanvasFrame.getDefaultGamma();
+            double cameraGamma = Math.max(grabber.getGamma(), 1.0);
 
-        } catch (Exception err) {
+            // QUÉ: Inicialización de la ventana de visualización.
+            // CÓMO: Crea un CanvasFrame con título y factor de gamma calculado.
+            // POR QUÉ: Proporciona el lienzo donde se renderizará cada cuadro de video.
+            CanvasFrame canvas = new CanvasFrame("Real-Time Camera - Java 21", gamma / cameraGamma);
             
-            System.out.println("Error loading OpenCV: " + err.getMessage());
-            
-            // Muestra la ruta del error para saber exactamente qué falló en la carga
-            err.printStackTrace();
+            try {
+                // QUÉ: Configuración de comportamiento de la ventana.
+                // CÓMO: Establece visibilidad, redimensionado y cierre de recursos.
+                // POR QUÉ: Permite que el usuario vea e interactúe con la interfaz.
+                canvas.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+                canvas.setVisible(true);
+                canvas.setResizable(true);
+
+                System.out.println("Capturing video... Close the window to exit.");
+
+                // QUÉ: Bucle principal de renderizado (Game Loop).
+                // CÓMO: Mientras la ventana sea visible, extrae y muestra frames.
+                // POR QUÉ: Crea la secuencia de video continua a partir de fotos fijas.
+                while (canvas.isVisible()) {
+                    Frame frame = grabber.grab(); // QUÉ: Captura un frame del sensor.
+                    
+                    if (frame == null) {
+                        System.err.println("Failed to capture frame from camera.");
+                        break;
+                    }
+
+                    // QUÉ: Renderizado de imagen.
+                    // CÓMO: Envía el objeto Frame al lienzo del canvas.
+                    // POR QUÉ: Actualiza la imagen en pantalla para el usuario.
+                    canvas.showImage(frame); 
+                    
+                    // QUÉ: Control de FPS (Frames per Second).
+                    // CÓMO: Pausa el hilo actual por 33 milisegundos.
+                    // POR QUÉ: Mantiene la fluidez a 30 FPS y evita sobrecalentar la CPU.
+                    Thread.sleep(33); 
+                }
+            } finally {
+                // QUÉ: Liberación de recursos de interfaz.
+                // CÓMO: Destruye el objeto de la ventana y libera su memoria de video.
+                // POR QUÉ: Evita fugas de memoria (memory leaks) en el sistema.
+                canvas.dispose();
+            }
+
+            System.out.println("Exiting and releasing camera hardware...");
+        } catch (Exception e) {
+            // QUÉ: Manejo de errores de hardware y concurrencia.
+            // CÓMO: Captura fallos de acceso a cámara o interrupciones de hilo.
+            // POR QUÉ: Proporciona diagnóstico si el dispositivo está ocupado o falla.
+            System.err.println("Error accessing camera: " + e.getMessage());
+            e.printStackTrace();
         }
+
+        System.out.println("Camera hardware released successfully.");
     }
 }

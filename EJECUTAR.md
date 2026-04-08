@@ -1,6 +1,6 @@
 # Ejecutar InitializingOpenCV
 
-Este proyecto usa Maven y Java 21 para cargar OpenCV a través de JavaCV.
+Este proyecto usa Maven y Java 21 para capturar y mostrar video en tiempo real desde la cámara del sistema usando JavaCV / OpenCV.
 
 ## Estructura clave
 
@@ -12,6 +12,7 @@ Este proyecto usa Maven y Java 21 para cargar OpenCV a través de JavaCV.
 - Java 21 instalado
 - Maven instalado
 - Conexión a Internet la primera vez para descargar dependencias
+- Cámara web disponible y no utilizada por otra aplicación
 
 ## Ejecución
 
@@ -22,20 +23,21 @@ Este proyecto usa Maven y Java 21 para cargar OpenCV a través de JavaCV.
 mvn compile exec:java
 ```
 
-3. Si todo está bien, deberías ver una salida como:
+3. Se abrirá una ventana llamada `Cámara en Tiempo Real - Java 21`.
+4. Verifica que el feed de cámara se muestre sin parpadeo.
+5. Cierra la ventana para liberar la cámara correctamente.
 
-```text
-Detected OpenCV version: 4.9.0
-OpenCV has loaded successfully!
-[INFO] BUILD SUCCESS
-```
+## Comportamiento esperado
+
+- La aplicación inicia la cámara por defecto (`ID 0`).
+- El video se muestra en una ventana en tiempo real.
+- Al cerrar la ventana, la cámara se libera automáticamente.
 
 ## Notas
 
 - La primera ejecución puede tardar más porque Maven descarga las dependencias.
+- Si la cámara no se abre, comprueba que ningún otro programa la esté usando.
 - Si VS Code muestra mensajes de error aunque el terminal compile bien, recarga el servidor Java con:
 
     - `Ctrl+Shift+P`
     - `Java: Clean Java Language Server Workspace`
-
-- Si quieres ejecutar explicitamente otra clase `main`, ajusta `com.vision.InitializingOpenCV` en el `pom.xml` o usa `-Dexec.mainClass=...`.
