@@ -1,49 +1,65 @@
 package com.vision.models;
 
 import ai.onnxruntime.*;
+import org.opencv.core.Mat;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
+
 import java.io.File;
 import java.nio.FloatBuffer;
 import java.util.Collections;
 
 /**
- * OnnxModelLoader - Enfocado en el Criterio de Aceptación 1:
- * Cargar el modelo sin errores y verificar su estado.
+ * OnnxModelLoader - Especialista en extraer los 21 puntos (Landmarks) de una mano.
  */
 public class OnnxModelLoader implements AutoCloseable {
     private OrtEnvironment env;
     private OrtSession session;
 
     public OnnxModelLoader(String modelPath) throws OrtException {
-        // Validación AC1: Verificar si el archivo existe
         File modelFile = new File(modelPath);
         if (!modelFile.exists()) {
-            throw new RuntimeException("Error AC1: No se encontró el archivo del modelo en: " + modelFile.getAbsolutePath());
+            throw new RuntimeException("Error: No se encontró el modelo en: " + modelFile.getAbsolutePath());
         }
-
-        // 1. Inicializar el entorno de ONNX
         this.env = OrtEnvironment.getEnvironment();
-        
-        // 2. Cargar el modelo en la sesión
-        // Si esta línea falla, lanzará una OrtException, cumpliendo con la detección de errores de carga.
         this.session = env.createSession(modelPath, new OrtSession.SessionOptions());
-        
-        System.out.println("✅ AC1: Modelo cargado exitosamente.");
-        System.out.println("Nombres de entrada: " + session.getInputNames());
-        System.out.println("Nombres de salida: " + session.getOutputNames());
+        System.out.println("✅ Especialista en Landmarks listo.");
     }
 
     /**
-     * Reservado para Criterio de Aceptación 2 y 3.
+     * PRE-PROCESAMIENTO: Convierte el recorte de la mano a 224x224 RGB [0,1]
      */
-    public void runInference(float[] imageData) throws OrtException {
+    public float[] preprocess(Mat frame) {
+        Mat resized = new Mat();
+        Imgproc.resize(frame, resized, new Size(224, 224));
+        Imgproc.cvtColor(resized, resized, Imgproc.COLOR_BGR2RGB);
+        
+        float[] floatValues = new float[1 * 3 * 224 * 224];
+        for (int y = 0; y < 224; y++) {
+            for (int x = 0; x < 224; x++) {
+                double[] rgb = resized.get(y, x);
+                // Formato NCHW: Rojo continuo, luego Verde, luego Azul
+                floatValues[0 * 224 * 224 + y * 224 + x] = (float) (rgb[0] / 255.0);
+                floatValues[1 * 224 * 224 + y * 224 + x] = (float) (rgb[1] / 255.0);
+                floatValues[2 * 224 * 224 + y * 224 + x] = (float) (rgb[2] / 255.0);
+            }
+        }
+        resized.release();
+        return floatValues;
+    }
+
+    /**
+     * PREDICCIÓN: Retorna los 21 puntos clave (AC 2)
+     */
+    public float[][] predict(float[] imageData) throws OrtException {
         long[] shape = { 1, 3, 224, 224 };
         try (OnnxTensor inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(imageData), shape)) {
-            // Se usa el nombre de entrada detectado dinámicamente o uno por defecto
             String inputName = session.getInputNames().iterator().next();
             try (OrtSession.Result results = session.run(Collections.singletonMap(inputName, inputTensor))) {
-                OnnxValue outputValue = results.get(0);
-                float[][] landmarks = (float[][]) outputValue.getValue();
-                System.out.println("Inferencia realizada. Puntos: " + landmarks.length);
+                
+                // Obtenemos los 63 valores (21 puntos * 3 ejes)
+                float[][] output = ((float[][][]) results.get(0).getValue())[0];
+                return output;
             }
         }
     }
