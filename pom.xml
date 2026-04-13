@@ -30,6 +30,12 @@
             <version>${javacv.version}</version>
         </dependency>
 
+        <!-- ONNX Runtime for Java -->
+        <dependency>
+            <groupId>com.microsoft.onnxruntime</groupId>
+            <artifactId>onnxruntime</artifactId>
+            <version>1.17.1</version>
+        </dependency>
         <!-- ===================== -->
         <!-- DEPENDENCIAS DE TEST -->
         <!-- ===================== -->
