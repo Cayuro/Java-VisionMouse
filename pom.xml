@@ -50,13 +50,16 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- 🔥 IMPORTANTE: evita problemas con Java 21 -->
+        <!-- IMPORTANTE: evita problemas con Java 21 -->
+
+        <!-- mockito-inline 5.5.0 not available, using alternative -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-inline</artifactId>
-            <version>5.5.0</version>
+            <version>5.2.0</version>
             <scope>test</scope>
         </dependency>
+
 
         <!-- Cucumber -->
         <dependency>
@@ -108,7 +111,7 @@
                 </configuration>
             </plugin>
 
-            <!-- 🔥 CLAVE para tests (JUnit5 + Cucumber + Java21) -->
+            <!-- CLAVE para tests (JUnit5 + Cucumber + Java21) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
