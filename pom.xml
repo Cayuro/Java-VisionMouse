@@ -1,55 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         http://www.mvnrepository.com/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.vision</groupId>
-    <artifactId>java-vision-mouse</artifactId>
+    <groupId>com.mousevision</groupId>
+    <artifactId>mouse-vision</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Java Vision Mouse</name>
-    <description>Proyecto de visión por computadora con OpenCV en Java</description>
+    <!-- ✅ CORREGIDO -->
+    <name>MouseVision - Hand Controlled Mouse</name>
 
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <javacv.version>1.5.10</javacv.version>
+        <javacv.version>1.5.13</javacv.version>
     </properties>
 
     <dependencies>
-        <!-- JavaCV Platform: Incluye OpenCV y otras librerías de visión por computadora empaquetadas para Java -->
-        <!-- Esta dependencia proporciona acceso a OpenCV desde Java, permitiendo operaciones como procesamiento de imágenes, detección de objetos, etc. -->
+
+        <!-- OpenCV / JavaCV -->
         <dependency>
             <groupId>org.bytedeco</groupId>
             <artifactId>javacv-platform</artifactId>
             <version>${javacv.version}</version>
         </dependency>
+
+        <!-- ===================== -->
+        <!-- DEPENDENCIAS DE TEST -->
+        <!-- ===================== -->
+
+        <!-- JUnit 5 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Mockito -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 🔥 IMPORTANTE: evita problemas con Java 21 -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-inline</artifactId>
+            <version>5.5.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cucumber -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-java</artifactId>
+            <version>7.14.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cucumber + JUnit 5 -->
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-junit-platform-engine</artifactId>
+            <version>7.14.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- JUnit Platform Suite -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <version>1.10.0</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
-            <!-- Maven Compiler Plugin: Configurado para usar Java 21 como source y target -->
-            <!-- Esto asegura que el código se compile con las características de Java 21 -->
+
+            <!-- Compilador Java 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.11.0</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>21</source>
                     <target>21</target>
                 </configuration>
             </plugin>
+
+            <!-- Ejecutar app -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.0</version>
                 <configuration>
-                    <mainClass>com.vision.InitializingOpenCV</mainClass>
+                    <mainClass>com.mousevision.MouseVisionApp</mainClass>
                 </configuration>
             </plugin>
+
+            <!-- 🔥 CLAVE para tests (JUnit5 + Cucumber + Java21) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                </configuration>
+            </plugin>
+
         </plugins>
     </build>
+
 </project>
