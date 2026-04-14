@@ -23,6 +23,16 @@ public record HandLandmarks(float[][] points) {
             );
         }
     }
+
+    /**
+     * En un record valido siempre hay 21 puntos.
+     *
+     * @return true cuando la instancia fue construida correctamente.
+     */
+    public boolean isValid() {
+        return true;
+    }
+
     /**
      * Retorna las coordenadas normalizadas (x, y) de la punta del dedo medio.
      * Corresponde al Landmark 12.
