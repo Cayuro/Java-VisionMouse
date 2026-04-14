@@ -5,6 +5,7 @@ import com.vision.detection.HandLandmarks;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.Before;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class GestureSteps {
@@ -13,8 +14,8 @@ public class GestureSteps {
     private HandLandmarks landmarks;
     private String gestureResult;
     
-@io.cucumber.java.Before
-public void setup() {
+    @Before
+    public void setup() {
         recognizer = new GestureRecognizer();
     }
     
@@ -35,7 +36,6 @@ public void setup() {
     
     @When("gesture recognition is performed")
     public void recognize_gesture() {
-        setup();
         gestureResult = recognizer.detect(landmarks);
     }
     
