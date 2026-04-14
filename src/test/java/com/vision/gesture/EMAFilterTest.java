@@ -1,9 +1,7 @@
-package com.mouseVision.util;
+package com.vision.gesture;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-
-import com.vision.gesture.EMAFilter;
 
 public class EMAFilterTest {
 
@@ -43,4 +41,3 @@ public class EMAFilterTest {
         assertEquals(50.0, filtered, 0.001);
     }
 }
-

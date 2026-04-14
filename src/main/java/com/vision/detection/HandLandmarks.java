@@ -12,6 +12,9 @@ import java.awt.geom.Point2D;
  * @param points Array de 21 puntos, cada uno con [x, y, z] normalizado.
  */
 public record HandLandmarks(float[][] points) {
+    public boolean isValid() {
+        return points != null && points.length == 21;
+    }
     /**
      * Valida que el array tenga exactamente 21 puntos al construirse.
      */

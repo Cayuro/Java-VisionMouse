@@ -1,3 +1,130 @@
+# VisionMouse - Hand Tracking Mouse Control
+
+[![Maven](https://img.shields.io/badge/Maven-Central-orange.svg)](https://mvnrepository.org/artifact/com.mousevision/mouse-vision)
+[![Java 21](https://img.shields.io/badge/Java-21-blue.svg)](https://openjdk.org/)
+[![Tests](https://img.shields.io/badge/Tests-Cucumber%20BDD-green.svg)](https://cucumber.io/)
+
+Hand tracking mouse controller using OpenCV, ONNX Runtime, and JavaCV.
+
+## Quick Start
+
+```bash
+mvn clean compile exec:java
+```
+
+## Features
+
+- Real-time hand landmark detection (21 points)
+- Palm detection + landmark extraction pipeline
+- Gesture recognition (Move, Click, Drag)
+- Mouse cursor control with EMA smoothing
+- **BDD Tests with Cucumber** (Gherkin Given-When-Then)
+
+## Run Tests
+
+```bash
+# All tests (JUnit + Cucumber)
+mvn test
+
+# Smoke tests only
+mvn test -Dcucumber.tags="@smoke"
+
+# Specific feature
+mvn test -Dcucumber.features="**/gesture_recognition.feature"
+```
+
+## BDD Test Coverage
+
+| Feature | Scenarios | Status |
+|---------|-----------|--------|
+| Hand Detection | 2 | ✅ Implemented |
+| Gesture Recognition | 3 | ✅ Implemented |
+| Pipeline Integration | 1 | ✅ Implemented |
+| Mouse Control | 2 | ✅ Implemented |
+
+View reports: `target/cucumber-reports/`
+
+## Architecture
+
+```
+Camera → Pipeline → Landmarks → Gestures → MouseController
+```
+
+**Cucumber Structure:**
+```
+src/test/resources/features/*.feature
+└── src/test/java/com/vision/cucumber/
+    ├── Steps.java
+    ├── Runner.java
+    └── TestDataFactory.java
+```
+
+## Tech Stack
+
+- Java 21
+- Maven
+- OpenCV (JavaCV 1.5.13)
+- ONNX Runtime 1.17.1
+- Cucumber 7.14.0 (BDD)
+- JUnit 5 + Mockito
+
+## 🚀 GitHub Actions CI/CD (Mandatory Tests)
+
+Create `.github/workflows/maven.yml` to run tests on every PR/push:
+
+```yaml
+name: Java CI with Maven & Cucumber
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        
+    - name: Build with Maven
+      run: mvn -B test --file pom.xml
+      # FAILS PR if tests fail! Mandatory ✅
+
+    - name: Cucumber Report
+      if: always()
+      uses: cucumber/gherkin-github-action@v1
+      with:
+        path: target/cucumber-reports/
+```
+
+**Features:**
+- **Mandatory**: PRs blocked if `mvn test` fails
+- **Cucumber Reports**: Visual Gherkin results in GitHub
+- **Java 21**: Matches project
+- **Ubuntu**: Fast Linux runner
+
+**Status Badge:** Add to README: `![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Java%20CI/badge.svg)`
+
+**Setup:** 
+1. Create `.github/workflows/maven.yml`
+2. Push → Tests run automatically
+3. PRs require passing tests
+
+## Models
+
+- `models/palm_detection.onnx`
+- `models/hand_landmark.onnx`
+
+---
+
 # 📄 Software Requirements Specification (SRS)
 **Project:** VisionMouse  
 **Version:** 1.0.0  
