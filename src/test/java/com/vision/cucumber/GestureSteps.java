@@ -21,7 +21,7 @@ public class GestureSteps {
     
     @Given("incomplete hand landmarks")
     public void incomplete_landmarks() {
-        landmarks = HandLandmarks.fromPipeline(new float[0][]);
+        landmarks = null;
     }
     
     @Given("complete valid hand landmarks in neutral position")
@@ -31,7 +31,14 @@ public class GestureSteps {
     
     @Given("hand landmarks representing {string}")
     public void landmarks_for_gesture(String gesture) {
-        landmarks = new HandLandmarks(TestDataFactory.createValidLandmarks());
+        String normalizedGesture = gesture == null ? "" : gesture.trim().toLowerCase();
+
+        switch (normalizedGesture) {
+            case "open palm" -> landmarks = new HandLandmarks(TestDataFactory.createValidLandmarks());
+            case "closed fist" -> landmarks = new HandLandmarks(TestDataFactory.createClosedFistLandmarks());
+            case "pointing" -> landmarks = new HandLandmarks(TestDataFactory.createPointingLandmarks());
+            default -> landmarks = new HandLandmarks(TestDataFactory.createValidLandmarks());
+        }
     }
     
     @When("gesture recognition is performed")

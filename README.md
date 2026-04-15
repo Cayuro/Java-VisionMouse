@@ -23,7 +23,7 @@ mvn clean compile exec:java
 ## Run Tests
 
 ```bash
-# All tests (JUnit + Cucumber)
+# All tests (JUnit + simulated Cucumber BDD)
 mvn test
 
 # Smoke tests only
@@ -37,10 +37,10 @@ mvn test -Dcucumber.features="**/gesture_recognition.feature"
 
 | Feature | Scenarios | Status |
 |---------|-----------|--------|
-| Hand Detection | 2 | ✅ Implemented |
-| Gesture Recognition | 3 | ✅ Implemented |
-| Pipeline Integration | 1 | ✅ Implemented |
-| Mouse Control | 2 | ✅ Implemented |
+| Hand Detection | 2 | ✅ Simulated |
+| Gesture Recognition | 3 | ✅ Simulated |
+| Pipeline Integration | 1 | ✅ Simulated |
+| Mouse Control | 2 | ✅ Simulated |
 
 View reports: `target/cucumber-reports/`
 
@@ -70,16 +70,16 @@ src/test/resources/features/*.feature
 
 ## 🚀 GitHub Actions CI/CD (Mandatory Tests)
 
-Create `.github/workflows/maven.yml` to run tests on every PR/push:
+The repository already includes `.github/workflows/maven.yml` to run tests on every PR/push:
 
 ```yaml
 name: Java CI with Maven & Cucumber
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, developer ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, developer ]
 
 jobs:
   build:
@@ -96,26 +96,29 @@ jobs:
         
     - name: Build with Maven
       run: mvn -B test --file pom.xml
-      # FAILS PR if tests fail! Mandatory ✅
+      # Fails the PR if tests fail
 
-    - name: Cucumber Report
+    - name: Upload test reports
       if: always()
-      uses: cucumber/gherkin-github-action@v1
+      uses: actions/upload-artifact@v4
       with:
-        path: target/cucumber-reports/
+        name: test-reports
+        path: |
+          target/surefire-reports/
+          target/cucumber-reports/
 ```
 
 **Features:**
 - **Mandatory**: PRs blocked if `mvn test` fails
-- **Cucumber Reports**: Visual Gherkin results in GitHub
+- **Cucumber Reports**: HTML and JSON reports generated under `target/cucumber-reports/`
 - **Java 21**: Matches project
 - **Ubuntu**: Fast Linux runner
 
-**Status Badge:** Add to README: `![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/workflows/Java%20CI/badge.svg)`
+**Status Badge:** Add to README: `![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/maven.yml/badge.svg)`
 
 **Setup:** 
-1. Create `.github/workflows/maven.yml`
-2. Push → Tests run automatically
+1. Push changes to the repo
+2. GitHub Actions runs `mvn test`
 3. PRs require passing tests
 
 ## Models
