@@ -19,7 +19,7 @@ public class PalmDetector implements AutoCloseable {
     private OrtSession session;
 
     private static final int INPUT_SIZE = 192;
-    private static final float SCORE_THRESHOLD = 0.5f;
+    private static final float SCORE_THRESHOLD = 0.55f; // Un poco más permisivo para la otra mano
 
     // Estructura para guardar nuestras "boyas" o anclas
     private static class Anchor {
@@ -84,7 +84,8 @@ public class PalmDetector implements AutoCloseable {
     public Rect2d detect(Mat frame) throws OrtException {
         float[] input = preprocess(frame);
         try (OnnxTensor tensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(input), new long[]{1, INPUT_SIZE, INPUT_SIZE, 3})) {
-            try (OrtSession.Result results = session.run(Collections.singletonMap("input_1", tensor))) {
+            String inputName = session.getInputNames().iterator().next();
+            try (OrtSession.Result results = session.run(Collections.singletonMap(inputName, tensor))) {
                 float[][][] regressors = (float[][][]) results.get(0).getValue();
                 float[][][] scores = (float[][][]) results.get(1).getValue();
                 return decode(regressors[0], scores[0], frame.cols(), frame.rows());
