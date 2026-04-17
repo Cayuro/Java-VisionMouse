@@ -36,18 +36,18 @@ public class HandTrackingApp {
             try {
                 camera.start();
             } catch (Exception e) {
-                System.err.println("⚠️ No se pudo abrir cámara 0. Intentando con cámara 1...");
+                System.err.println(" No se pudo abrir cámara 0. Intentando con cámara 1...");
                 try {
                     camera = new CameraCapture(1);
                     camera.start();
                 } catch (Exception e2) {
-                    System.err.println("⚠️ No se pudo abrir cámara 1. Intentando con cámara 2...");
+                    System.err.println(" No se pudo abrir cámara 1. Intentando con cámara 2...");
                     camera = new CameraCapture(2);
                     camera.start();
                 }
             }
             
-            System.out.println("✅ Sistema listo. Pulsa ESC en la ventana de video para salir.");
+            System.out.println(" Sistema listo. Pulsa ESC en la ventana de video para salir.");
 
             boolean running = true;
             while (running) {
