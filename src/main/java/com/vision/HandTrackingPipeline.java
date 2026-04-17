@@ -88,7 +88,7 @@ public class HandTrackingPipeline implements AutoCloseable {
         float[][] finalLandmarks = transformLandmarks(cropLandmarks, roi, frame.cols(), frame.rows(), isFlipped);
 
         // ACTUALIZAR RASTREO
-        lastRoi = calculateRoiFromLandmarks(finalHandmarks, frame.cols(), frame.rows());
+        lastRoi = calculateRoiFromLandmarks(finalLandmarks, frame.cols(), frame.rows());
         
         return finalLandmarks;
     }
