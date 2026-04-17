@@ -1,8 +1,7 @@
-package com.vision;
+package com.vision.models;
 
 import ai.onnxruntime.OrtException;
-import com.vision.models.OnnxModelLoader;
-import com.vision.models.PalmDetector;
+
 import org.opencv.core.*;
 
 /**

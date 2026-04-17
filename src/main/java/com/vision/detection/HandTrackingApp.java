@@ -1,10 +1,11 @@
-package com.vision;
+package com.vision.detection;
 
-import com.vision.HandTrackingPipeline;
 import org.opencv.core.*;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
+
+import com.vision.models.HandTrackingPipeline;
 
 /**
  * HandTrackingApp - Aplicación final para probar el Pipeline Profesional.
