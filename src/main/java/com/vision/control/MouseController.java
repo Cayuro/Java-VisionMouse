@@ -19,7 +19,8 @@ public class MouseController {
 
 		if ("MOVE".equals(gesture) && landmarks != null && landmarks.isValid()) {
 			Point2D middleFingerTip = landmarks.getMiddleFingerTip();
-			lastCursorX = (int) Math.round(middleFingerTip.getX() * screenWidth);
+			double mirroredX = 1.0 - middleFingerTip.getX();
+			lastCursorX = (int) Math.round(mirroredX * screenWidth);
 			lastCursorY = (int) Math.round(middleFingerTip.getY() * screenHeight);
 			smoothingApplied = true;
 			return "MOVE";
