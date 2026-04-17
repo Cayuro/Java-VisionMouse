@@ -52,7 +52,18 @@
   Create a function that translates a camera point (640x480) to a screen point (e.g., 1920x1080).
 
 - **US-03.3: Mirroring Effect**  
-  Invert the X-axis mapping so that if the user moves their hand right, the mouse also moves right (mirror behavior).
+  As a system user, I want the horizontal cursor movement to behave like a mirror, so that control feels natural and intuitive when I move my hand.
+
+  **Acceptance Criteria:**
+  1. Given that I move my finger to the right  
+     When the system detects the movement  
+     Then the cursor must move to the right on the screen
+  2. Given that I use gesture control  
+     When I interact with the system  
+     Then the horizontal cursor movement must feel like a natural reflection of my movements
+  3. Given an original X coordinate captured by the camera  
+     When the system maps the position to the screen  
+     Then it must invert the horizontal axis before applying the final screen coordinate
 
 - **US-03.4: Physical Movement**  
   Send the mapped coordinates to `robot.mouseMove(x, y)` to move the real cursor.

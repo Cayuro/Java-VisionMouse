@@ -52,4 +52,16 @@ public class MouseControlSteps {
         assertEquals("CLICK", actionResult);
         assertTrue(mouseController.wasLeftClickPerformed());
     }
+
+    @Then("mouse cursor moves to the right side of the screen")
+    public void mouse_cursor_moves_to_the_right_side_of_the_screen() {
+        assertEquals("MOVE", actionResult);
+        assertEquals(1536, mouseController.getLastCursorX());
+    }
+
+    @Then("horizontal position is mirrored before screen mapping")
+    public void horizontal_position_is_mirrored_before_screen_mapping() {
+        assertEquals("MOVE", actionResult);
+        assertEquals(1620, mouseController.getLastCursorX());
+    }
 }
