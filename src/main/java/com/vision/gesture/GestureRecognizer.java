@@ -1,7 +1,12 @@
 package com.vision.gesture;
 
 import com.vision.detection.HandLandmarks;
+import com.vision.detection.LandmarkIndex;
 
+/**
+ * GestureRecognizer - Identifica gestos de la mano basados en landmarks.
+ * Optimizado para consistencia comparando puntas con articulaciones (TIP vs PIP).
+ */
 public class GestureRecognizer {
     public String detect(HandLandmarks landmarks) {
         if (landmarks == null || !landmarks.isValid()) {
@@ -9,37 +14,29 @@ public class GestureRecognizer {
         }
 
         float[][] points = landmarks.points();
-        float wristY = points[0][1];
-        float thumbTipY = points[4][1];
-        float indexTipY = points[8][1];
-        float middleTipY = points[12][1];
-        float ringTipY = points[16][1];
-        float pinkyTipY = points[20][1];
+        
+        // Determinar si cada dedo está extendido (Punta por encima de la articulación PIP)
+        // Recordar: En OpenCV, Y disminuye hacia arriba.
+        boolean indexExtended = points[LandmarkIndex.INDEX_FINGER_TIP.value()][1] < points[LandmarkIndex.INDEX_FINGER_PIP.value()][1];
+        boolean middleExtended = points[LandmarkIndex.MIDDLE_FINGER_TIP.value()][1] < points[LandmarkIndex.MIDDLE_FINGER_PIP.value()][1];
+        boolean ringExtended = points[LandmarkIndex.RING_FINGER_TIP.value()][1] < points[LandmarkIndex.RING_FINGER_PIP.value()][1];
+        boolean pinkyExtended = points[LandmarkIndex.PINKY_TIP.value()][1] < points[LandmarkIndex.PINKY_PIP.value()][1];
 
-        boolean pointing = indexTipY + 0.12f < middleTipY
-                && indexTipY + 0.12f < ringTipY
-                && indexTipY + 0.12f < pinkyTipY;
-        if (pointing) {
+        // DRAG: Solo el índice extendido
+        if (indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
             return "DRAG";
         }
 
-        boolean closedFist = indexTipY > wristY - 0.12f
-                && middleTipY > wristY - 0.12f
-                && ringTipY > wristY - 0.12f
-                && pinkyTipY > wristY - 0.12f
-                && thumbTipY > wristY - 0.12f;
-        if (closedFist) {
+        // CLICK: Puño cerrado (ningún dedo extendido)
+        if (!indexExtended && !middleExtended && !ringExtended && !pinkyExtended) {
             return "CLICK";
         }
 
-        boolean openPalm = indexTipY + 0.12f < wristY
-                && middleTipY + 0.12f < wristY
-                && ringTipY + 0.12f < wristY
-                && pinkyTipY + 0.12f < wristY;
-        if (openPalm) {
+        // MOVE: Palma abierta (al menos índice y medio extendidos)
+        if (indexExtended && middleExtended) {
             return "MOVE";
         }
 
-        return "MOVE";
+        return "NONE";
     }
 }

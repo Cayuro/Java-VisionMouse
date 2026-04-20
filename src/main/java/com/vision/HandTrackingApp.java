@@ -49,22 +49,55 @@ public class HandTrackingApp {
             
             System.out.println(" Sistema listo. Pulsa ESC en la ventana de video para salir.");
 
+            com.vision.control.MouseController mouseController = new com.vision.control.MouseController();
+            
+            // Detectar resolución real de pantalla
+            java.awt.Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
+            int screenWidth = (int) screenSize.getWidth();
+            int screenHeight = (int) screenSize.getHeight();
+            System.out.println(" Resolución detectada: " + screenWidth + "x" + screenHeight);
+
+            com.vision.gesture.GestureRecognizer recognizer = new com.vision.gesture.GestureRecognizer();
+
             boolean running = true;
             while (running) {
                 Mat frame = camera.getLatestFrame();
                 if (frame == null || frame.empty()) {
                     if (frame != null) frame.release();
-                    // Esperar un poco si la cámara aún no tiene frames validados
                     try { Thread.sleep(10); } catch (InterruptedException e) {}
                     continue; 
                 }
 
                 // PROCESAR FRAME (Detección e Inferencia)
-                float[][] landmarks = pipeline.processFrame(frame);
+                float[][] landmarksRaw = pipeline.processFrame(frame);
+                com.vision.detection.HandLandmarks handLandmarks = com.vision.detection.HandLandmarks.fromPipeline(landmarksRaw);
 
-                // DIBUJAR RESULTADOS
-                if (landmarks.length == 21) {
-                    drawHand(frame, landmarks);
+                // DIBUJAR Y CONTROLAR
+                if (handLandmarks != null) {
+                    drawHand(frame, landmarksRaw);
+                    
+                    // Reconocer Gesto
+                    String gesture = recognizer.detect(handLandmarks);
+                    
+                    // Controlar Mouse (Lógica + Ejecución Física)
+                    String action = mouseController.processGesture(gesture, handLandmarks, screenWidth, screenHeight);
+                    mouseController.execute(); // <--- EJECUCIÓN REAL
+                    
+                    // Dibujar estado en pantalla
+                    Imgproc.putText(frame, "Accion: " + action, new Point(20, 80), 
+                                   Imgproc.FONT_HERSHEY_SIMPLEX, 0.8, new Scalar(0, 255, 255), 2);
+                    
+                    if (mouseController.wasSmoothingApplied()) {
+                        Imgproc.putText(frame, "Pos: " + mouseController.getLastCursorX() + "," + mouseController.getLastCursorY(), 
+                                       new Point(20, 110), Imgproc.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(0, 255, 0), 1);
+                    }
+
+                    // MOSTRAR ERRORES SI EXISTEN
+                    if (mouseController.hasError()) {
+                        Imgproc.rectangle(frame, new Point(0, 440), new Point(640, 480), new Scalar(0, 0, 255), -1);
+                        Imgproc.putText(frame, "ERROR: " + mouseController.getLastError(), new Point(10, 465), 
+                                       Imgproc.FONT_HERSHEY_SIMPLEX, 0.6, new Scalar(255, 255, 255), 2);
+                    }
                 } else {
                     Imgproc.putText(frame, "No se detecta mano", new Point(20, 50), 
                                    Imgproc.FONT_HERSHEY_SIMPLEX, 0.8, new Scalar(0, 0, 255), 2);
@@ -76,7 +109,6 @@ public class HandTrackingApp {
 
                 HighGui.imshow("Hand Tracking Profesional - Java 21", frame);
                 
-                // Aumentamos a 30ms para dar estabilidad al refresco de la ventana en Linux
                 if (HighGui.waitKey(30) == 27) {
                     running = false;
                 }
@@ -101,13 +133,13 @@ public class HandTrackingApp {
         for (int[] c : CONNECTIONS) {
             Point p1 = new Point(landmarks[c[0]][0] * w, landmarks[c[0]][1] * h);
             Point p2 = new Point(landmarks[c[1]][0] * w, landmarks[c[1]][1] * h);
-            Imgproc.line(frame, p1, p2, new Scalar(255, 255, 255), 2);
+            Imgproc.line(frame, p1, p2, new Scalar(0, 0, 0), 10);
         }
 
         // Dibujar los 21 Landmarks
         for (int i = 0; i < 21; i++) {
             Point p = new Point(landmarks[i][0] * w, landmarks[i][1] * h);
-            Imgproc.circle(frame, p, 5, new Scalar(0, 255, 0), -1);
+            Imgproc.circle(frame, p, 5, new Scalar(255, 255, 255), -1);
         }
     }
 }

@@ -8,6 +8,9 @@ import org.opencv.core.Scalar;
  * Factory for test data - mock OpenCV Mats and landmarks
  */
 public class TestDataFactory {
+    static {
+        org.bytedeco.javacpp.Loader.load(org.bytedeco.opencv.opencv_java.class);
+    }
 
     private static float[][] baseLandmarks() {
         float[][] landmarks = new float[21][3];

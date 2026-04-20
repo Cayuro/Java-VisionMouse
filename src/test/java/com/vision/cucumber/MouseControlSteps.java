@@ -9,12 +9,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MouseControlSteps {
 
-    private final MouseController mouseController = new MouseController();
+    private final MouseController mouseController = createTestController();
     private HandLandmarks landmarks;
     private String gesture;
     private String actionResult;
 
-    @Given("hand landmarks at normalized position ({double}, {double})")
+    private MouseController createTestController() {
+        MouseController mc = new MouseController();
+        mc.setDebounceThreshold(1);
+        return mc;
+    }
+
+    @Given("hand landmarks at normalized position {double}, {double}")
     public void hand_landmarks_at_normalized_position(double x, double y) {
         landmarks = new HandLandmarks(TestDataFactory.createCursorLandmarks((float) x, (float) y));
     }
