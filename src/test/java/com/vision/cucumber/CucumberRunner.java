@@ -9,4 +9,7 @@ import org.junit.platform.suite.api.Suite;
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
 public class CucumberRunner {
+    static {
+        org.bytedeco.javacpp.Loader.load(org.bytedeco.opencv.opencv_java.class);
+    }
 }

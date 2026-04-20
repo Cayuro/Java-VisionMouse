@@ -4,20 +4,20 @@ Feature: Mouse Control from Hand Gestures
   So that users can control the mouse with hand movements
 
   Scenario: Mouse cursor movement from hand position
-    Given hand landmarks at normalized position (0.5, 0.5)
+    Given hand landmarks at normalized position 0.5, 0.5
     And gesture "MOVE" is recognized
     When mouse controller processes the gesture
     Then mouse cursor moves to screen center
     And smooth cursor movement is applied using EMA filter
 
   Scenario: Mirrored horizontal movement feels natural to the user
-    Given hand landmarks at normalized position (0.2, 0.5)
+    Given hand landmarks at normalized position 0.2, 0.5
     And gesture "MOVE" is recognized
     When mouse controller processes the gesture
     Then mouse cursor moves to the right side of the screen
 
   Scenario: Horizontal position is mirrored before screen mapping
-    Given hand landmarks at normalized position (0.15625, 0.5)
+    Given hand landmarks at normalized position 0.15625, 0.5
     And gesture "MOVE" is recognized
     When mouse controller processes the gesture
     Then horizontal position is mirrored before screen mapping

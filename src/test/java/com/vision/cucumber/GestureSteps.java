@@ -29,7 +29,7 @@ public class GestureSteps {
         landmarks = new HandLandmarks(TestDataFactory.createValidLandmarks());
     }
     
-    @Given("hand landmarks representing {string}")
+    @Given("hand landmarks representing {}")
     public void landmarks_for_gesture(String gesture) {
         String normalizedGesture = gesture == null ? "" : gesture.trim().toLowerCase();
 

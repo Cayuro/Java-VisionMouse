@@ -17,4 +17,8 @@ public class EMAFilter {
         }
         return previousValue;
     }
+
+    public void reset() {
+        this.previousValue = Double.NaN;
+    }
 }
