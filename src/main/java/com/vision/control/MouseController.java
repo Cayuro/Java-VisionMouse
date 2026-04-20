@@ -2,10 +2,13 @@ package com.vision.control;
 
 import com.vision.detection.HandLandmarks;
 import com.vision.gesture.EMAFilter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.awt.Robot;
 import java.awt.AWTException;
 import java.awt.event.InputEvent;
 import java.awt.geom.Point2D;
+import java.util.Properties;
 
 /**
  * MouseController - Maneja la lógica del cursor con consistencia y ejecución real.
@@ -17,8 +20,9 @@ public class MouseController {
 	private boolean leftClickPerformed;
 	private boolean smoothingApplied;
 
-	private final EMAFilter filterX = new EMAFilter(0.2);
-	private final EMAFilter filterY = new EMAFilter(0.2);
+	private final EMAFilter filterX = new EMAFilter(loadDoubleProperty("mouse.ema.alpha", 0.3));
+	private final EMAFilter filterY = new EMAFilter(loadDoubleProperty("mouse.ema.alpha", 0.3));
+	private boolean mirroringEnabled = loadBooleanProperty("mouse.mirroring.enabled", true);
 
 	private String currentState = "NONE";
 	private String pendingGesture = "NONE";
@@ -46,6 +50,39 @@ public class MouseController {
 			r.setAutoDelay(0);
 			return r;
 		} catch (AWTException | RuntimeException e) {
+			return null;
+		}
+	}
+
+	private static double loadDoubleProperty(String key, double defaultValue) {
+		String value = loadProperty(key);
+		if (value == null || value.isBlank()) {
+			return defaultValue;
+		}
+		try {
+			return Double.parseDouble(value.trim());
+		} catch (NumberFormatException e) {
+			return defaultValue;
+		}
+	}
+
+	private static boolean loadBooleanProperty(String key, boolean defaultValue) {
+		String value = loadProperty(key);
+		if (value == null || value.isBlank()) {
+			return defaultValue;
+		}
+		return Boolean.parseBoolean(value.trim());
+	}
+
+	private static String loadProperty(String key) {
+		Properties properties = new Properties();
+		try (InputStream inputStream = MouseController.class.getResourceAsStream("/app.properties")) {
+			if (inputStream == null) {
+				return null;
+			}
+			properties.load(inputStream);
+			return properties.getProperty(key);
+		} catch (IOException e) {
 			return null;
 		}
 	}
@@ -78,12 +115,13 @@ public class MouseController {
 
 		// Calcular Coordenadas (siempre que el estado no sea NONE)
 		if (!"NONE".equals(currentState)) {
-			Point2D middleFingerTip = landmarks.getMiddleFingerTip();
-			double mirroredX = 1.0 - middleFingerTip.getX();
-			
-			lastCursorX = filterX.filter(mirroredX * screenWidth);
-			lastCursorY = filterY.filter(middleFingerTip.getY() * screenHeight);
-			
+			Point2D indexFingerTip = landmarks.getIndexFingerTip();
+			double normalizedX = applyHorizontalMirror(indexFingerTip.getX());
+			double normalizedY = clamp01(indexFingerTip.getY());
+
+			lastCursorX = filterX.filter(normalizedX * screenWidth);
+			lastCursorY = filterY.filter(normalizedY * screenHeight);
+
 			smoothingApplied = true;
 		}
 
@@ -147,6 +185,28 @@ public class MouseController {
 
 	public void setDebounceThreshold(int threshold) {
 		this.debounceThreshold = threshold;
+	}
+
+	public void setMirroringEnabled(boolean enabled) {
+		this.mirroringEnabled = enabled;
+	}
+
+	public boolean isMirroringEnabled() {
+		return mirroringEnabled;
+	}
+
+	private double applyHorizontalMirror(double normalizedX) {
+		double clampedX = clamp01(normalizedX);
+		if (!mirroringEnabled) {
+			return clampedX;
+		}
+		return 1.0 - clampedX;
+	}
+
+	private double clamp01(double value) {
+		if (value < 0.0) return 0.0;
+		if (value > 1.0) return 1.0;
+		return value;
 	}
 
 	public int getLastCursorX() {

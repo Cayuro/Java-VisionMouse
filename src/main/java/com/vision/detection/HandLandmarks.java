@@ -39,6 +39,17 @@ public record HandLandmarks(float[][] points) {
         int i = LandmarkIndex.MIDDLE_FINGER_TIP.value(); // = 12
         return new Point2D.Float(points[i][0], points[i][1]);
     }
+
+    /**
+     * Retorna las coordenadas normalizadas (x, y) de la punta del dedo indice.
+     * Corresponde al Landmark 8.
+     *
+     * @return Point2D con x e y entre 0.0 y 1.0.
+     */
+    public Point2D getIndexFingerTip() {
+        int i = LandmarkIndex.INDEX_FINGER_TIP.value(); // = 8
+        return new Point2D.Float(points[i][0], points[i][1]);
+    }
     /**
      * Crea un HandLandmarks desde el float[][] que entrega processFrame().
      * Retorna null si no hay mano detectada (array vac�o).
