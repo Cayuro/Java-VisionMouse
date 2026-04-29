@@ -80,9 +80,10 @@ public class TestDataFactory {
 
     public static float[][] createCursorLandmarks(float middleTipX, float middleTipY) {
         float[][] landmarks = baseLandmarks();
+		landmarks[8][0] = middleTipX;
+		landmarks[8][1] = middleTipY;
         landmarks[12][0] = middleTipX;
         landmarks[12][1] = middleTipY;
-        landmarks[8][1] = middleTipY - 0.02f;
         landmarks[16][1] = middleTipY + 0.02f;
         landmarks[20][1] = middleTipY + 0.04f;
         return landmarks;

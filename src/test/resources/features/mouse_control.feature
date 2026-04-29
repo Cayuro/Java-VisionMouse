@@ -22,6 +22,12 @@ Feature: Mouse Control from Hand Gestures
     When mouse controller processes the gesture
     Then horizontal position is mirrored before screen mapping
 
+  Scenario: Intuitive movement when finger moves to the right
+    Given gesture "MOVE" is recognized
+    And the finger starts at normalized x 0.7 and then moves to x 0.3
+    When mouse controller processes the rightward movement sequence
+    Then the cursor must move to the right on screen
+
   Scenario: Mouse click from gesture
     Given gesture "CLICK" is recognized from closed fist
     When mouse controller processes the gesture
