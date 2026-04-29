@@ -50,6 +50,60 @@ public record HandLandmarks(float[][] points) {
         int i = LandmarkIndex.INDEX_FINGER_TIP.value(); // = 8
         return new Point2D.Float(points[i][0], points[i][1]);
     }
+
+    // === Métodos para GestureRecognizer ===
+
+    public Point2D thumbTip() {
+        return getPoint(LandmarkIndex.THUMB_TIP);
+    }
+
+    public Point2D thumbMcp() {
+        return getPoint(LandmarkIndex.THUMB_MCP);
+    }
+
+    public Point2D indexTip() {
+        return getPoint(LandmarkIndex.INDEX_FINGER_TIP);
+    }
+
+    public Point2D indexMcp() {
+        return getPoint(LandmarkIndex.INDEX_FINGER_MCP);
+    }
+
+    public Point2D middleTip() {
+        return getPoint(LandmarkIndex.MIDDLE_FINGER_TIP);
+    }
+
+    public Point2D middleMcp() {
+        return getPoint(LandmarkIndex.MIDDLE_FINGER_MCP);
+    }
+
+    public Point2D ringTip() {
+        return getPoint(LandmarkIndex.RING_FINGER_TIP);
+    }
+
+    public Point2D ringMcp() {
+        return getPoint(LandmarkIndex.RING_FINGER_MCP);
+    }
+
+    public Point2D pinkyTip() {
+        return getPoint(LandmarkIndex.PINKY_TIP);
+    }
+
+    public Point2D pinkyMcp() {
+        return getPoint(LandmarkIndex.PINKY_MCP);
+    }
+
+    /**
+     * Método auxiliar privado para obtener un punto en coordenadas normalizadas.
+     *
+     * @param index El LandmarkIndex del punto
+     * @return Point2D con coordenadas normalizadas entre 0.0 y 1.0
+     */
+    private Point2D getPoint(LandmarkIndex index) {
+        int i = index.value();
+        return new Point2D.Float(points[i][0], points[i][1]);
+    }
+
     /**
      * Crea un HandLandmarks desde el float[][] que entrega processFrame().
      * Retorna null si no hay mano detectada (array vac�o).
