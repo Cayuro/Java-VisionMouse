@@ -25,9 +25,14 @@ public class GestureRecognizer {
 
     // ===== Estados de Debounce =====
     // Para evitar que un mismo gesto genere múltiples eventos en frames consecutivos
-    private boolean isLeftPinched = false;  // true si detectamos pinza izquierda activa
-    private boolean isRightPinched = false; // true si detectamos pinza derecha activa
-    private boolean isFistClosed = false;   // true si la mano está en puño
+private State state = State.IDLE;
+
+private enum State {
+    IDLE,
+    LEFT_PINCH,
+    RIGHT_PINCH,
+    FIST_DRAG
+}
 
     /**
      * Procesa los landmarks de una mano y retorna la acción detectada.
@@ -40,62 +45,49 @@ public class GestureRecognizer {
      * @param landmarks Los 21 puntos de la mano detectados
      * @return La acción de ratón correspondiente (LEFT_CLICK, RIGHT_CLICK, DRAG_START, DRAG_END, NONE)
      */
-    public MouseAction process(HandLandmarks landmarks) {
+public MouseAction process(HandLandmarks landmarks) {
         if (landmarks == null || !landmarks.isValid()) {
-            // Si los landmarks no son válidos, resetea estados
-            resetStates();
+            state = State.IDLE;
             return MouseAction.NONE;
         }
 
-        // ===== PASO 1: DETECTAR PUÑO (PRIORIDAD MÁXIMA) =====
-        boolean currentFistClosed = isFistClosed(landmarks);
+        boolean currentFist = isFistClosed(landmarks);
+        double leftDist = calculateDistance(landmarks.thumbTip(), landmarks.indexTip());
+        double rightDist = calculateDistance(landmarks.thumbTip(), landmarks.middleTip());
+        boolean pinchLeft = leftDist < PINCH_THRESHOLD && !currentFist;
+        boolean pinchRight = rightDist < PINCH_THRESHOLD && !currentFist;
 
-        if (currentFistClosed && !isFistClosed) {
-            // Transición: mano abierta → puño cerrado
-            isFistClosed = true;
-            // Resetea estados de clicks para evitar interferencia
-            resetClickStates();
-            return MouseAction.DRAG_START;
-        } else if (!currentFistClosed && isFistClosed) {
-            // Transición: puño cerrado → mano abierta
-            isFistClosed = false;
-            resetClickStates();
+        // Priority: FIST > LEFT_PINCH > RIGHT_PINCH
+        if (currentFist) {
+            if (state != State.FIST_DRAG) {
+                state = State.FIST_DRAG;
+                return MouseAction.DRAG_START;
+            }
+            return MouseAction.NONE;
+        } else if (state == State.FIST_DRAG) {
+            state = State.IDLE;
             return MouseAction.DRAG_END;
         }
 
-        // ===== PASO 2: SI PUÑO CERRADO, IGNORA CLICKS =====
-        if (isFistClosed) {
+        if (pinchLeft) {
+            if (state != State.LEFT_PINCH) {
+                state = State.LEFT_PINCH;
+                return MouseAction.LEFT_CLICK;
+            }
             return MouseAction.NONE;
         }
 
-        // ===== PASO 3: DETECTAR CLICKS (SOLO SI PUÑO ABIERTO) =====
-
-        // Click Izquierdo: Índice + Pulgar
-        double leftDistance = calculateDistance(landmarks.thumbTip(), landmarks.indexTip());
-        if (leftDistance < PINCH_THRESHOLD) {
-            if (!isLeftPinched) {
-                // Dispara click por primera vez
-                isLeftPinched = true;
-                return MouseAction.LEFT_CLICK;
-            }
-            // Si ya estaba pinchado, no dispara de nuevo (debounce)
-        } else {
-            // La pinza se liberó
-            isLeftPinched = false;
-        }
-
-        // Click Derecho: Medio + Pulgar
-        double rightDistance = calculateDistance(landmarks.thumbTip(), landmarks.middleTip());
-        if (rightDistance < PINCH_THRESHOLD) {
-            if (!isRightPinched) {
-                // Dispara click por primera vez
-                isRightPinched = true;
+        if (pinchRight) {
+            if (state != State.RIGHT_PINCH) {
+                state = State.RIGHT_PINCH;
                 return MouseAction.RIGHT_CLICK;
             }
-            // Si ya estaba pinchado, no dispara de nuevo (debounce)
-        } else {
-            // La pinza se liberó
-            isRightPinched = false;
+            return MouseAction.NONE;
+        }
+
+        // Release pinch
+        if (state == State.LEFT_PINCH || state == State.RIGHT_PINCH) {
+            state = State.IDLE;
         }
 
         return MouseAction.NONE;
@@ -131,21 +123,5 @@ public class GestureRecognizer {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    /**
-     * Resetea todos los estados de debounce.
-     * Se utiliza cuando los landmarks no son válidos o se detectan cambios abruptos.
-     */
-    private void resetStates() {
-        resetClickStates();
-        isFistClosed = false;
-    }
-
-    /**
-     * Resetea solo los estados de clicks (no toca el estado del puño).
-     * Se utiliza al entrar/salir del modo puño.
-     */
-    private void resetClickStates() {
-        isLeftPinched = false;
-        isRightPinched = false;
-    }
 }
+

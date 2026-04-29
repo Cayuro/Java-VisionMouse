@@ -8,12 +8,14 @@ import com.vision.detection.HandLandmarks;
 class HandLandmarksTestBuilder {
 
     private final float[][] points;
+private boolean[] isSet;
 
     /**
      * Inicializa la mano con puntos dispersos para evitar colisiones accidentales (0,0).
      */
-    HandLandmarksTestBuilder() {
+HandLandmarksTestBuilder() {
         this.points = new float[21][3];
+        this.isSet = new boolean[21];
         // Inicialización dispersa: cada punto en una coordenada X distinta
         for (int i = 0; i < 21; i++) {
             points[i][0] = i * 0.04f; // Evita que thumbTip e indexTip nazcan en el mismo lugar
@@ -35,7 +37,8 @@ class HandLandmarksTestBuilder {
     HandLandmarksTestBuilder pinkyTip(double x, double y) { return setPoint(20, x, y); }
     HandLandmarksTestBuilder pinkyMcp(double x, double y) { return setPoint(17, x, y); }
 
-    private HandLandmarksTestBuilder setPoint(int index, double x, double y) {
+private HandLandmarksTestBuilder setPoint(int index, double x, double y) {
+        isSet[index] = true;
         points[index][0] = (float) x;
         points[index][1] = (float) y;
         return this;
@@ -45,20 +48,20 @@ class HandLandmarksTestBuilder {
      * Configura una anatomía de mano estándar donde los dedos están separados 
      * y extendidos para evitar interferencias entre sí.
      */
-    private void setupNaturalHandLayout() {
+private void setupNaturalHandLayout() {
         // Nudillos (MCP) en una base horizontal Y=0.6
-        setPoint(2, 0.2, 0.6);  // THUMB_MCP
-        setPoint(5, 0.4, 0.6);  // INDEX_MCP
-        setPoint(9, 0.5, 0.6);  // MIDDLE_MCP
-        setPoint(13, 0.6, 0.6); // RING_MCP
-        setPoint(17, 0.7, 0.6); // PINKY_MCP
+        if (!isSet[2]) setPoint(2, 0.2, 0.6);  // THUMB_MCP
+        if (!isSet[5]) setPoint(5, 0.4, 0.6);  // INDEX_MCP
+        if (!isSet[9]) setPoint(9, 0.5, 0.6);  // MIDDLE_MCP
+        if (!isSet[13]) setPoint(13, 0.6, 0.6); // RING_MCP
+        if (!isSet[17]) setPoint(17, 0.7, 0.6); // PINKY_MCP
 
         // Puntas (TIP) extendidas hacia arriba Y=0.2
-        setPoint(4, 0.1, 0.2);  // THUMB_TIP
-        setPoint(8, 0.4, 0.2);  // INDEX_TIP
-        setPoint(12, 0.5, 0.2); // MIDDLE_TIP
-        setPoint(16, 0.6, 0.2); // RING_TIP
-        setPoint(20, 0.7, 0.2); // PINKY_TIP
+        if (!isSet[4]) setPoint(4, 0.1, 0.2);  // THUMB_TIP
+        if (!isSet[8]) setPoint(8, 0.4, 0.2);  // INDEX_TIP
+        if (!isSet[12]) setPoint(12, 0.5, 0.2); // MIDDLE_TIP
+        if (!isSet[16]) setPoint(16, 0.6, 0.2); // RING_TIP
+        if (!isSet[20]) setPoint(20, 0.7, 0.2); // PINKY_TIP
     }
 
     /**
