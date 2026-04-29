@@ -1,6 +1,7 @@
 package com.vision.cucumber;
 
 import com.vision.gesture.GestureRecognizer;
+import com.vision.gesture.MouseAction;
 import com.vision.detection.HandLandmarks;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
@@ -12,7 +13,7 @@ public class GestureSteps {
     
     private GestureRecognizer recognizer;
     private HandLandmarks landmarks;
-    private String gestureResult;
+    private MouseAction gestureResult;
     
     @Before
     public void setup() {
@@ -43,11 +44,13 @@ public class GestureSteps {
     
     @When("gesture recognition is performed")
     public void recognize_gesture() {
-        gestureResult = recognizer.detect(landmarks);
+        gestureResult = recognizer.process(landmarks);
     }
     
     @Then("gesture result is {string}")
     public void gesture_result(String expected) {
-        assertEquals(expected, gestureResult);
+        String expectedAction = (expected == null) ? "NONE" : expected.trim().toUpperCase();
+        String actualAction = (gestureResult != null) ? gestureResult.name() : "NONE";
+        assertEquals(expectedAction, actualAction);
     }
 }

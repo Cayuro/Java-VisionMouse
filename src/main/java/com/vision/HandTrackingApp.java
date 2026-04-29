@@ -77,7 +77,8 @@ public class HandTrackingApp {
                     drawHand(frame, landmarksRaw);
                     
                     // Reconocer Gesto
-                    String gesture = recognizer.detect(handLandmarks);
+                    com.vision.gesture.MouseAction mouseAction = recognizer.process(handLandmarks);
+                    String gesture = (mouseAction != null) ? mouseAction.name() : "NONE";
                     
                     // Controlar Mouse (Lógica + Ejecución Física)
                     String action = mouseController.processGesture(gesture, handLandmarks, screenWidth, screenHeight);
