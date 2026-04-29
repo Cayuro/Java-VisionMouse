@@ -9,85 +9,110 @@ import java.awt.geom.Point2D;
  * Arquitectura de Pipeline:
  *   Captura -> HandLandmarks -> GestureRecognizer -> Action
  *
- * Gestos soportados:
- *   - Click Izquierdo: Pinza (INDEX_FINGER_TIP ∪ THUMB_TIP, distancia < 0.05)
- *   - Click Derecho: Pinza (MIDDLE_FINGER_TIP ∪ THUMB_TIP)
- *   - Drag: Puño cerrado (TIP > MCP para los 4 dedos largos)
+ * Máquina de Estados:
+ *   - NONE: Sin gesto activo
+ *   - PINCHING: Gesto de pinza (click) activo
+ *   - DRAGGING: Gesto de arrastre activo
+ *
+ * Eventos generados:
+ *   - LEFT_CLICK: Primer frame de pinza izquierda
+ *   - RIGHT_CLICK: Primer frame de pinza derecha
+ *   - DRAG_START: Primer frame de puño cerrado
+ *   - DRAGGING: Frames continuos de puño cerrado
+ *   - DRAG_END: Primer frame después de abrir puño
+ *   - NONE: Sin evento nuevo
  *
  * Prioridades:
- *   1. Si puño está cerrado → DRAG_START/DRAG_END, ignora clicks
- *   2. Si puño abierto → detecta LEFT_CLICK, RIGHT_CLICK
- *   3. Debounce: Un gesto solo se dispara UNA VEZ por activación
+ *   1. DRAG > PINCH (puño tiene prioridad sobre clicks)
+ *   2. LEFT_CLICK > RIGHT_CLICK (prioridad al índice)
  */
 public class GestureRecognizer {
 
     private static final double PINCH_THRESHOLD = 0.05; // Distancia euclidiana máxima para pinza
 
-    // ===== Estados de Debounce =====
-    // Para evitar que un mismo gesto genere múltiples eventos en frames consecutivos
-private State state = State.IDLE;
+    // ===== Estados de la Máquina de Estados =====
+    private State state = State.NONE;
+        // Ensure proper state reset after gesture end
 
-private enum State {
-    IDLE,
-    LEFT_PINCH,
-    RIGHT_PINCH,
-    FIST_DRAG
-}
+    private enum State {
+        NONE,       // Sin gesto activo
+        PINCHING,   // Gesto de pinza activo (click)
+        DRAGGING    // Gesto de arrastre activo
+    }
 
     /**
      * Procesa los landmarks de una mano y retorna la acción detectada.
      *
-     * Flujo de lógica:
-     *   1. Detectar estado del puño (cierre/apertura)
-     *   2. Si puño cerrado → solo DRAG_START/DRAG_END, ignora clicks
-     *   3. Si puño abierto → detecta clicks con debounce
+     * Máquina de Estados:
+     *   - NONE → DRAGGING: DRAG_START (primer frame de puño cerrado)
+     *   - DRAGGING → NONE: DRAG_END (primer frame de puño abierto)
+     *   - NONE → PINCHING: LEFT_CLICK o RIGHT_CLICK (primer frame de pinza)
+     *   - PINCHING → NONE: NONE (liberación de pinza)
      *
      * @param landmarks Los 21 puntos de la mano detectados
-     * @return La acción de ratón correspondiente (LEFT_CLICK, RIGHT_CLICK, DRAG_START, DRAG_END, NONE)
+     * @return La acción de ratón correspondiente
      */
-public MouseAction process(HandLandmarks landmarks) {
+    public MouseAction process(HandLandmarks landmarks) {
         if (landmarks == null || !landmarks.isValid()) {
-            state = State.IDLE;
+            state = State.NONE;
+        // Ensure proper state reset after gesture end
             return MouseAction.NONE;
         }
 
-        boolean currentFist = isFistClosed(landmarks);
+        boolean isFistClosed = isFistClosed(landmarks);
         double leftDist = calculateDistance(landmarks.thumbTip(), landmarks.indexTip());
         double rightDist = calculateDistance(landmarks.thumbTip(), landmarks.middleTip());
-        boolean pinchLeft = leftDist < PINCH_THRESHOLD && !currentFist;
-        boolean pinchRight = rightDist < PINCH_THRESHOLD && !currentFist;
+        boolean leftPinch = leftDist < PINCH_THRESHOLD && !isFistClosed;
+        boolean rightPinch = rightDist < PINCH_THRESHOLD && !isFistClosed;
 
-        // Priority: FIST > LEFT_PINCH > RIGHT_PINCH
-        if (currentFist) {
-            if (state != State.FIST_DRAG) {
-                state = State.FIST_DRAG;
+        // Priority 1: DRAG has highest priority
+        if (isFistClosed) {
+            if (state == State.DRAGGING) {
+                // Continuing drag - no event
+                return MouseAction.NONE;
+            } else {
+                // Starting drag - transition from NONE or PINCHING
+                state = State.DRAGGING;// Starting drag
                 return MouseAction.DRAG_START;
             }
-            return MouseAction.NONE;
-        } else if (state == State.FIST_DRAG) {
-            state = State.IDLE;
+        }
+
+        // If we were dragging and fist opened, end the drag
+        if (state == State.DRAGGING) {
+            state = State.NONE;// Clear drag state
+        // Ensure proper state reset after gesture end
             return MouseAction.DRAG_END;
         }
 
-        if (pinchLeft) {
-            if (state != State.LEFT_PINCH) {
-                state = State.LEFT_PINCH;
+        // Priority 2: PINCH gestures (LEFT_CLICK has priority over RIGHT_CLICK)
+        if (leftPinch && rightPinch) {
+            if (state != State.PINCHING) {
+                state = State.PINCHING;
+                return MouseAction.LEFT_CLICK; // LEFT_CLICK has priority
+            }
+            return MouseAction.NONE; // Debounce - already in PINCHING state
+        }
+
+        if (leftPinch) {
+            if (state != State.PINCHING) {
+                state = State.PINCHING;
                 return MouseAction.LEFT_CLICK;
             }
-            return MouseAction.NONE;
+            return MouseAction.NONE; // Debounce
         }
 
-        if (pinchRight) {
-            if (state != State.RIGHT_PINCH) {
-                state = State.RIGHT_PINCH;
+        if (rightPinch) {
+            if (state != State.PINCHING) {
+                state = State.PINCHING;
                 return MouseAction.RIGHT_CLICK;
             }
-            return MouseAction.NONE;
+            return MouseAction.NONE; // Debounce
         }
 
-        // Release pinch
-        if (state == State.LEFT_PINCH || state == State.RIGHT_PINCH) {
-            state = State.IDLE;
+        // No gesture detected - reset PINCHING state if needed
+        if (state == State.PINCHING) {
+            state = State.NONE;
+        // Ensure proper state reset after gesture end
         }
 
         return MouseAction.NONE;

@@ -68,6 +68,7 @@ private void setupNaturalHandLayout() {
      * Construye una mano con dedos extendidos (TIP.y < MCP.y).
      */
     HandLandmarks buildWithOpenFist() {
+        java.util.Arrays.fill(isSet, false);
         setupNaturalHandLayout();
         return new HandLandmarks(points);
     }
@@ -76,6 +77,7 @@ private void setupNaturalHandLayout() {
      * Construye una mano con puño cerrado (TIP.y > MCP.y).
      */
     HandLandmarks buildWithClosedFist() {
+        java.util.Arrays.fill(isSet, false);
         setupNaturalHandLayout();
         // Bajamos las puntas de los 4 dedos principales por debajo de los nudillos
         setPoint(8, 0.4, 0.8);  // INDEX_TIP
@@ -91,6 +93,7 @@ private void setupNaturalHandLayout() {
      * Crea un estado de click izquierdo (Pulgar e Índice juntos).
      */
     HandLandmarks buildWithLeftPinch() {
+        java.util.Arrays.fill(isSet, false);
         setupNaturalHandLayout();
         setPoint(4, 0.4, 0.2);  // THUMB_TIP en (0.4, 0.2)
         setPoint(8, 0.4, 0.21); // INDEX_TIP casi en el mismo lugar
@@ -101,6 +104,7 @@ private void setupNaturalHandLayout() {
      * Crea un estado de click derecho (Pulgar y Medio juntos).
      */
     HandLandmarks buildWithRightPinch() {
+        java.util.Arrays.fill(isSet, false);
         setupNaturalHandLayout();
         setPoint(4, 0.5, 0.2);  // THUMB_TIP se mueve hacia el medio
         setPoint(12, 0.5, 0.21); // MIDDLE_TIP en el mismo lugar
