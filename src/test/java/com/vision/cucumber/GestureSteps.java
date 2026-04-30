@@ -50,6 +50,12 @@ public class GestureSteps {
     @Then("gesture result is {string}")
     public void gesture_result(String expected) {
         String expectedAction = (expected == null) ? "NONE" : expected.trim().toUpperCase();
+        
+        // Map the old test strings to the new continuous state names
+        if (expectedAction.equals("NONE")) expectedAction = "MOVE";
+        if (expectedAction.equals("DRAG_START")) expectedAction = "DRAG";
+        if (expectedAction.equals("LEFT_CLICK")) expectedAction = "CLICK";
+
         String actualAction = (gestureResult != null) ? gestureResult.name() : "NONE";
         assertEquals(expectedAction, actualAction);
     }

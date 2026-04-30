@@ -9,113 +9,50 @@ import java.awt.geom.Point2D;
  * Arquitectura de Pipeline:
  *   Captura -> HandLandmarks -> GestureRecognizer -> Action
  *
- * Máquina de Estados:
- *   - NONE: Sin gesto activo
- *   - PINCHING: Gesto de pinza (click) activo
- *   - DRAGGING: Gesto de arrastre activo
- *
- * Eventos generados:
- *   - LEFT_CLICK: Primer frame de pinza izquierda
- *   - RIGHT_CLICK: Primer frame de pinza derecha
- *   - DRAG_START: Primer frame de puño cerrado
- *   - DRAGGING: Frames continuos de puño cerrado
- *   - DRAG_END: Primer frame después de abrir puño
- *   - NONE: Sin evento nuevo
- *
- * Prioridades:
- *   1. DRAG > PINCH (puño tiene prioridad sobre clicks)
- *   2. LEFT_CLICK > RIGHT_CLICK (prioridad al índice)
+ * Acciones continuas (sin estado interno, el debounce lo hace MouseController):
+ *   - NONE: Sin landmarks válidos
+ *   - DRAG: Puño cerrado
+ *   - CLICK: Pinza izquierda (Pulgar + Índice)
+ *   - RIGHT_CLICK: Pinza derecha (Pulgar + Medio)
+ *   - MOVE: Mano abierta sin ningún otro gesto activo
  */
 public class GestureRecognizer {
 
     private static final double PINCH_THRESHOLD = 0.05; // Distancia euclidiana máxima para pinza
 
-    // ===== Estados de la Máquina de Estados =====
-    private State state = State.NONE;
-        // Ensure proper state reset after gesture end
-
-    private enum State {
-        NONE,       // Sin gesto activo
-        PINCHING,   // Gesto de pinza activo (click)
-        DRAGGING    // Gesto de arrastre activo
-    }
-
     /**
-     * Procesa los landmarks de una mano y retorna la acción detectada.
-     *
-     * Máquina de Estados:
-     *   - NONE → DRAGGING: DRAG_START (primer frame de puño cerrado)
-     *   - DRAGGING → NONE: DRAG_END (primer frame de puño abierto)
-     *   - NONE → PINCHING: LEFT_CLICK o RIGHT_CLICK (primer frame de pinza)
-     *   - PINCHING → NONE: NONE (liberación de pinza)
+     * Procesa los landmarks de una mano y retorna la acción detectada en el frame actual.
      *
      * @param landmarks Los 21 puntos de la mano detectados
-     * @return La acción de ratón correspondiente
+     * @return La acción de ratón correspondiente (MOVE, CLICK, DRAG, etc.)
      */
     public MouseAction process(HandLandmarks landmarks) {
         if (landmarks == null || !landmarks.isValid()) {
-            state = State.NONE;
-        // Ensure proper state reset after gesture end
             return MouseAction.NONE;
         }
 
         boolean isFistClosed = isFistClosed(landmarks);
         double leftDist = calculateDistance(landmarks.thumbTip(), landmarks.indexTip());
-        double rightDist = calculateDistance(landmarks.thumbTip(), landmarks.middleTip());
+        double rightDist = calculateDistance(landmarks.thumbTip(), landmarks.ringTip());
         boolean leftPinch = leftDist < PINCH_THRESHOLD && !isFistClosed;
         boolean rightPinch = rightDist < PINCH_THRESHOLD && !isFistClosed;
 
-        // Priority 1: DRAG has highest priority
+        // Priority 1: SCROLL (puño cerrado)
         if (isFistClosed) {
-            if (state == State.DRAGGING) {
-                // Continuing drag - no event
-                return MouseAction.NONE;
-            } else {
-                // Starting drag - transition from NONE or PINCHING
-                state = State.DRAGGING;// Starting drag
-                return MouseAction.DRAG_START;
-            }
+            return MouseAction.SCROLL;
         }
 
-        // If we were dragging and fist opened, end the drag
-        if (state == State.DRAGGING) {
-            state = State.NONE;// Clear drag state
-        // Ensure proper state reset after gesture end
-            return MouseAction.DRAG_END;
-        }
-
-        // Priority 2: PINCH gestures (LEFT_CLICK has priority over RIGHT_CLICK)
-        if (leftPinch && rightPinch) {
-            if (state != State.PINCHING) {
-                state = State.PINCHING;
-                return MouseAction.LEFT_CLICK; // LEFT_CLICK has priority
-            }
-            return MouseAction.NONE; // Debounce - already in PINCHING state
-        }
-
+        // Priority 2: PINCH gestures (LEFT_CLICK tiene prioridad)
         if (leftPinch) {
-            if (state != State.PINCHING) {
-                state = State.PINCHING;
-                return MouseAction.LEFT_CLICK;
-            }
-            return MouseAction.NONE; // Debounce
+            return MouseAction.CLICK;
         }
 
         if (rightPinch) {
-            if (state != State.PINCHING) {
-                state = State.PINCHING;
-                return MouseAction.RIGHT_CLICK;
-            }
-            return MouseAction.NONE; // Debounce
+            return MouseAction.RIGHT_CLICK;
         }
 
-        // No gesture detected - reset PINCHING state if needed
-        if (state == State.PINCHING) {
-            state = State.NONE;
-        // Ensure proper state reset after gesture end
-        }
-
-        return MouseAction.NONE;
+        // Si la mano está abierta y no hay gestos especiales, es MOVE
+        return MouseAction.MOVE;
     }
 
     /**

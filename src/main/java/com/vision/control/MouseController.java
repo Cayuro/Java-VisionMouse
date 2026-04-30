@@ -30,7 +30,7 @@ public class MouseController {
 	private int debounceThreshold = 3;
 
 	private Robot robot;
-	private boolean isDragActive = false;
+	private int scrollAnchorY = -1;
 	private String lastError = null;
 
 	public MouseController() {
@@ -115,9 +115,9 @@ public class MouseController {
 
 		// Calcular Coordenadas (siempre que el estado no sea NONE)
 		if (!"NONE".equals(currentState)) {
-			Point2D indexFingerTip = landmarks.getIndexFingerTip();
-			double normalizedX = applyHorizontalMirror(indexFingerTip.getX());
-			double normalizedY = clamp01(indexFingerTip.getY());
+			Point2D trackingPoint = landmarks.getMiddleFingerTip();
+			double normalizedX = applyHorizontalMirror(trackingPoint.getX());
+			double normalizedY = clamp01(trackingPoint.getY());
 
 			lastCursorX = filterX.filter(normalizedX * screenWidth);
 			lastCursorY = filterY.filter(normalizedY * screenHeight);
@@ -144,29 +144,35 @@ public class MouseController {
 		try {
 			switch (currentState) {
 				case "MOVE":
-					if (isDragActive) {
-						robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-						isDragActive = false;
-					}
 					robot.mouseMove(x, y);
+					scrollAnchorY = -1; // reset scroll anchor
 					break;
 					
-				case "DRAG":
-					if (!isDragActive) {
-						robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
-						isDragActive = true;
+				case "SCROLL":
+					if (scrollAnchorY == -1) {
+						scrollAnchorY = y;
+					} else {
+						int dy = y - scrollAnchorY;
+						if (Math.abs(dy) > 15) { // Threshold for scroll
+							robot.mouseWheel(dy > 0 ? 1 : -1);
+							scrollAnchorY = y;
+						}
 					}
-					robot.mouseMove(x, y);
+					// Optional: keep mouse still or move it? We probably don't move it while scrolling.
 					break;
 					
 				case "CLICK":
-					if (isDragActive) {
-						robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
-						isDragActive = false;
-					}
 					robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
 					robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
 					currentState = "MOVE"; 
+					scrollAnchorY = -1;
+					break;
+					
+				case "RIGHT_CLICK":
+					robot.mousePress(InputEvent.BUTTON3_DOWN_MASK);
+					robot.mouseRelease(InputEvent.BUTTON3_DOWN_MASK);
+					currentState = "MOVE";
+					scrollAnchorY = -1;
 					break;
 			}
 			lastError = null; // Limpiar error si la ejecución fue exitosa
